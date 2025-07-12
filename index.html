@@ -3,374 +3,689 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini PDF Extractor v3</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Gemini PDF Data Extractor</title>
+    <script src="https://kit.fontawesome.com/2a9134c034.js" crossorigin="anonymous"></script>
     <style>
+        /* --- Modern Font & CSS Reset --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
         :root {
-            --primary-color: #4f46e5; --primary-hover: #4338ca; --secondary-color: #6b7280;
-            --background-color: #f3f4f6; --card-background: #ffffff; --border-color: #e5e7eb;
-            --success-color: #10b981; --error-color: #ef4444; --text-primary: #111827;
-            --text-secondary: #374151; --progress-bar-bg: #d1d5db;
+            --bg-color: #1a1a2e;
+            --panel-bg: rgba(23, 23, 43, 0.7);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --primary-accent: #00a8ff;
+            --primary-accent-dark: #007bb5;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0b0;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --input-bg: #16213e;
+            --border-radius: 12px;
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        body { font-family: 'Inter', sans-serif; background-color: var(--background-color); color: var(--text-primary); margin: 0; padding: 2rem; }
-        .container { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 2rem; }
-        .card { background-color: var(--card-background); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); padding: 2rem; }
-        .header { text-align: center; margin-bottom: 1rem; }
-        .header h1 { font-size: 2.25rem; font-weight: 700; color: var(--primary-color); }
-        .header p { font-size: 1.125rem; color: var(--text-secondary); max-width: 600px; margin: 0.5rem auto 0; }
-        .upload-box { border: 3px dashed var(--border-color); border-radius: 0.75rem; padding: 3rem; text-align: center; cursor: pointer; transition: all 0.3s ease; }
-        .upload-box:hover, .upload-box.dragover { border-color: var(--primary-color); background-color: #f0f0ff; }
-        .upload-icon { width: 50px; height: 50px; margin: 0 auto 1rem; color: var(--primary-color); }
-        #file-input, #pattern-input { display: none; }
-        #file-name { margin-top: 1rem; font-weight: 500; color: var(--primary-color); }
-        .btn { background-color: var(--primary-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
-        .btn:hover { background-color: var(--primary-hover); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
-        .btn:disabled { background-color: #a5b4fc; cursor: not-allowed; }
-        .btn-secondary { background-color: var(--secondary-color); }
-        .btn-secondary:hover { background-color: #5a616b; }
-        .loader { width: 20px; height: 20px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .alert { padding: 1rem; border-radius: 0.5rem; margin-top: 1.5rem; display: none; font-weight: 500; }
-        .alert.error { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
-        .alert.success { background-color: #d1fae5; color: #047857; border: 1px solid #6ee7b7; }
-        .table-wrapper { width: 100%; overflow-x: auto; }
-        .results-table, .editable-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; font-size: 0.875rem; }
-        .results-table th, .results-table td, .editable-table th, .editable-table td { border: 1px solid var(--border-color); padding: 0.75rem; text-align: left; }
-        .results-table th, .editable-table th { background-color: #f9fafb; font-weight: 600; }
-        .editable-table input[type="text"] { width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.375rem; transition: border-color 0.2s; box-sizing: border-box; }
-        .editable-table input[type="text"]:focus { outline: none; border-color: var(--primary-color); }
-        .hidden { display: none; }
-        .section-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
-        .progress-bar-container { width: 100%; background-color: var(--progress-bar-bg); border-radius: 0.5rem; overflow: hidden; margin: 1rem 0; }
-        .progress-bar { width: 0%; height: 20px; background-color: var(--primary-color); transition: width 0.3s ease-in-out; text-align: center; color: white; font-weight: 500; line-height: 20px; }
-        #progress-status { font-weight: 500; color: var(--text-secondary); }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(315deg, #1a1a2e 0%, #16213e 74%);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* --- Main Container & Layout --- */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        section {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--panel-border);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- Header --- */
+        header {
+            text-align: center;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        header h1 .fa-rocket {
+            color: var(--primary-accent);
+        }
+        header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        /* --- File Upload Area --- */
+        .drop-zone {
+            border: 2px dashed var(--panel-border);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--primary-accent);
+            background-color: rgba(0, 168, 255, 0.1);
+        }
+        .drop-zone-icon {
+            font-size: 3rem;
+            color: var(--primary-accent);
+        }
+        .drop-zone-text {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+        .file-input {
+            display: none;
+        }
+        #file-name {
+            margin-top: 20px;
+            text-align: center;
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        /* --- Progress Bar --- */
+        #progress-section h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 20px;
+            background-color: var(--input-bg);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-accent-dark), var(--primary-accent));
+            border-radius: 10px;
+            transition: width 0.4s ease;
+            text-align: center;
+            line-height: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        #progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: var(--text-muted);
+            min-height: 20px;
+        }
+
+        /* --- Analysis & Refinement Section --- */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 50px;
+        }
+        .form-group select {
+            font-family: 'Poppins', sans-serif;
+        }
+        .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
+        }
+        .columns-editor-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr 120px;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .columns-editor-grid input {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+        }
+         .columns-editor-grid input:focus {
+             outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
+         }
+        .columns-editor-header {
+            font-weight: 600;
+            color: var(--text-muted);
+            padding-bottom: 5px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            color: #fff;
+        }
+
+        /* --- Sample Data Table --- */
+        .table-container {
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--panel-border);
+        }
+        th {
+            background-color: var(--input-bg);
+            font-weight: 600;
+        }
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- Buttons --- */
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: var(--primary-accent);
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-accent-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 168, 255, 0.3);
+        }
+        .btn-secondary {
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--panel-border);
+        }
+        .btn-secondary:hover {
+            background-color: var(--panel-border);
+        }
+        
+        /* --- Result Section --- */
+        #result-section {
+            text-align: center;
+        }
+        #result-section .fa-check-circle {
+            font-size: 4rem;
+            color: var(--success-color);
+        }
+        #result-section h2 {
+            margin-top: 15px;
+            color: #fff;
+        }
+        #result-section p {
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        #download-link {
+            margin-top: 25px;
+        }
+
+        /* --- Error Notification --- */
+        #error-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--error-color);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        #error-close-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <div class="header">
-            <h1>Gemini PDF Extractor v3</h1>
-            <p>Advanced extraction with customizable, savable patterns and real-time progress.</p>
-        </div>
+        <header>
+            <h1><i class="fa-solid fa-rocket"></i> Gemini PDF Extractor</h1>
+            <p>Upload a PDF, let AI analyze it, refine the patterns, and extract structured data to Excel.</p>
+        </header>
 
-        <!-- Step 1: Upload -->
-        <div class="card" id="upload-card">
-            <div class="upload-box" id="upload-box">
-                <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M3 17.25V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75v10.5A2.25 2.25 0 0118.75 21H5.25A2.25 2.25 0 013 17.25z" /></svg>
-                <p><b>Click to upload a PDF</b> or drag and drop</p>
-                <input type="file" id="file-input" accept=".pdf">
-            </div>
-            <p id="file-name"></p>
-            <div style="text-align: center; margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
-                <button class="btn" id="analyze-btn" disabled>
-                    <div class="loader" id="analyze-loader"></div><span>Analyze New PDF</span>
-                </button>
-                <button class="btn btn-secondary" id="load-pattern-btn">
-                    <div class="loader"></div><span>Load Saved Pattern</span>
-                    <input type="file" id="pattern-input" accept=".json">
-                </button>
-            </div>
-        </div>
+        <!-- Step 1: Upload Section -->
+        <section id="upload-section">
+            <form id="upload-form">
+                <div id="drop-zone" class="drop-zone">
+                    <input type="file" id="file-input" class="file-input" accept=".pdf">
+                    <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
+                    <p class="drop-zone-text"><strong>Drag & drop your PDF here</strong><br>or click to select a file</p>
+                </div>
+                <p id="file-name"></p>
+            </form>
+        </section>
 
-        <!-- Universal Progress Card -->
-        <div class="card hidden" id="progress-card">
-            <h2 class="section-title">Processing...</h2>
+        <!-- Step 2: Progress Section (Shared for Analysis and Extraction) -->
+        <section id="progress-section" class="hidden">
+            <h2 id="progress-title">Analyzing Document...</h2>
             <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-bar">0%</div>
+                <div id="progress-bar-inner" class="progress-bar-inner"></div>
             </div>
-            <p id="progress-status">Initializing...</p>
-        </div>
+            <p id="progress-text">Starting...</p>
+        </section>
 
-        <!-- Step 2: Analysis & Customization -->
-        <div class="card hidden" id="analysis-card">
-            <h2 class="section-title">Customize Extraction Patterns</h2>
-            <p>AI has suggested the following. Edit the patterns below, then run the extraction.</p>
-            <div class="table-wrapper">
-                <div id="analysis-output"></div>
+        <!-- Step 3: Analysis & Refinement Section -->
+        <section id="analysis-section" class="hidden">
+            <h2 class="section-title">Refine Extraction Patterns</h2>
+            <p style="color: var(--text-muted); margin-top: -15px; margin-bottom: 25px;">The AI has analyzed your document. Review and adjust the patterns below for optimal accuracy.</p>
+            
+            <div class="form-group">
+                <label for="data-start-indicator">Data Start Indicator (Regex)</label>
+                <textarea id="data-start-indicator" rows="2"></textarea>
             </div>
-            <div style="text-align: center; margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
-                <button class="btn" id="extract-btn"><div class="loader" id="extract-loader"></div><span>Extract Data</span></button>
-                <button class="btn btn-secondary" id="save-pattern-btn"><span>Save These Patterns</span></button>
+            <div class="form-group">
+                <label for="record-separator">Record Separator (Regex)</label>
+                <textarea id="record-separator" rows="1"></textarea>
             </div>
-        </div>
 
-        <!-- Step 3: Results -->
-        <div class="card hidden" id="results-card">
-            <h2 class="section-title">Extraction Complete</h2>
-            <div class="alert success" id="results-summary"></div>
-            <div style="text-align: center; margin: 1.5rem 0;">
-                <a href="#" id="download-link" class="btn" download>Download Excel File</a>
+            <div class="form-group">
+                <label>Column Extraction Rules</label>
+                <div class="columns-editor-grid columns-editor-header">
+                    <span>Column Name</span>
+                    <span>Regex Pattern</span>
+                    <span>Data Type</span>
+                </div>
+                <div id="columns-editor"></div>
             </div>
-            <h3>Extracted Data Preview</h3>
-            <div class="table-wrapper">
-                <div id="results-preview"></div>
-            </div>
-        </div>
 
-        <div class="alert error" id="error-message"></div>
+            <div class="form-group">
+                <label>Sample Data Preview</label>
+                <div id="sample-data-table" class="table-container"></div>
+            </div>
+
+            <div class="button-container">
+                <button id="extract-btn" class="btn btn-primary">
+                    <i class="fa-solid fa-cogs"></i> Extract All Data
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 4: Result Section -->
+        <section id="result-section" class="hidden">
+            <i class="fa-solid fa-check-circle"></i>
+            <h2>Extraction Complete!</h2>
+            <p id="result-message"></p>
+            <div class="button-container" style="justify-content: center;">
+                <a id="download-link" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download Excel File</a>
+                <button id="start-over-btn" class="btn btn-secondary"><i class="fa-solid fa-rotate-left"></i> Start Over</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Error Notification -->
+    <div id="error-notification" class="hidden">
+        <span id="error-message"></span>
+        <button id="error-close-btn">×</button>
     </div>
 
     <script>
-        // UI Elements
-        const uploadBox = document.getElementById('upload-box');
-        const fileInput = document.getElementById('file-input');
-        const patternInput = document.getElementById('pattern-input');
-        const fileNameDisplay = document.getElementById('file-name');
-        const analyzeBtn = document.getElementById('analyze-btn');
-        const extractBtn = document.getElementById('extract-btn');
-        const loadPatternBtn = document.getElementById('load-pattern-btn');
-        const savePatternBtn = document.getElementById('save-pattern-btn');
-        const errorMessage = document.getElementById('error-message');
-
-        const uploadCard = document.getElementById('upload-card');
-        const progressCard = document.getElementById('progress-card');
-        const analysisCard = document.getElementById('analysis-card');
-        const resultsCard = document.getElementById('results-card');
-        
-        const progressBar = document.getElementById('progress-bar');
-        const progressStatus = document.getElementById('progress-status');
-        const analysisOutput = document.getElementById('analysis-output');
-        const resultsSummary = document.getElementById('results-summary');
-        const downloadLink = document.getElementById('download-link');
-        const resultsPreview = document.getElementById('results-preview');
-
-        // State
-        let uploadedFile = null;
-        let processedFilePath = null;
-        let progressSource = null;
-        let currentTaskId = null;
-
-        // File Handling
-        uploadBox.addEventListener('click', () => fileInput.click());
-        ['dragover', 'drop'].forEach(eventName => {
-            uploadBox.addEventListener(eventName, e => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (eventName === 'dragover') uploadBox.classList.add('dragover');
-                else {
-                    uploadBox.classList.remove('dragover');
-                    if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
-                }
-            });
-        });
-        uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('dragover'));
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
-        });
-
-        function handleFile(file) {
-            if (file.type === 'application/pdf') {
-                uploadedFile = file;
-                fileNameDisplay.textContent = `Selected: ${file.name}`;
-                analyzeBtn.disabled = false;
-                hideError();
-                resetState(true);
-            } else {
-                showError('Please select a valid PDF file.');
-                resetState();
-            }
-        }
-
-        // API Calls & Logic
-        analyzeBtn.addEventListener('click', async () => {
-            if (!uploadedFile) return;
-            currentTaskId = `task_${Date.now()}`;
-            startProgressStream(currentTaskId);
-
-            showProgressCard();
-            toggleButtonLoading(analyzeBtn, true);
-            hideError();
-
-            const formData = new FormData();
-            formData.append('file', uploadedFile);
-
-            try {
-                const response = await fetch('/upload-and-analyze', {
-                    method: 'POST',
-                    headers: { 'X-Task-ID': currentTaskId },
-                    body: formData
-                });
-                if (!response.ok) throw new Error((await response.json()).detail || 'Analysis failed');
-                const data = await response.json();
-                processedFilePath = data.file_path;
-                displayAnalysis(data);
-            } catch (error) {
-                showError(`Analysis Error: ${error.message}`);
-                hideProgressCard();
-            } finally {
-                toggleButtonLoading(analyzeBtn, false);
-            }
-        });
-
-        extractBtn.addEventListener('click', async () => {
-            if (!processedFilePath) return;
-            showProgressCard();
-            toggleButtonLoading(extractBtn, true);
-            hideError();
-
-            const { columns, record_separator } = getCustomizedPatterns();
-
-            try {
-                const response = await fetch('/extract-data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Task-ID': currentTaskId },
-                    body: JSON.stringify({ file_path: processedFilePath, columns, record_separator })
-                });
-                if (!response.ok) throw new Error((await response.json()).detail || 'Extraction failed');
-                const data = await response.json();
-                displayResults(data);
-            } catch (error) {
-                showError(`Extraction Error: ${error.message}`);
-                hideProgressCard();
-            } finally {
-                toggleButtonLoading(extractBtn, false);
-            }
-        });
-
-        // Pattern Management
-        loadPatternBtn.addEventListener('click', () => patternInput.click());
-        patternInput.addEventListener('change', (e) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const patterns = JSON.parse(event.target.result);
-                    if (!patterns.columns || !patterns.record_separator) throw new Error("Invalid pattern file");
-                    displayAnalysis(patterns, false);
-                } catch (err) {
-                    showError("Failed to load or parse pattern file.");
-                }
-            };
-            reader.readAsText(e.target.files[0]);
-        });
-
-        savePatternBtn.addEventListener('click', () => {
-            const patterns = getCustomizedPatterns();
-            const blob = new Blob([JSON.stringify(patterns, null, 4)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `pattern_${new Date().toISOString().slice(0,10)}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
-
-        // UI Rendering
-        function showProgressCard() {
-            uploadCard.classList.add('hidden');
-            analysisCard.classList.add('hidden');
-            resultsCard.classList.add('hidden');
-            progressCard.classList.remove('hidden');
-        }
-
-        function hideProgressCard() {
-            progressCard.classList.add('hidden');
-        }
-
-        function displayAnalysis(data, fromAI = true) {
-            hideProgressCard();
-            uploadCard.classList.add('hidden');
-            analysisCard.classList.remove('hidden');
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const uploadSection = document.getElementById('upload-section');
+            const progressSection = document.getElementById('progress-section');
+            const analysisSection = document.getElementById('analysis-section');
+            const resultSection = document.getElementById('result-section');
             
-            let recordSepHtml = `<h4>Record Separator (Regex)</h4><input type="text" id="record-separator" value="${(data.record_separator || '').replace(/"/g, '&quot;')}">`;
-            let patternHtml = `<h4>Column Patterns (Regex)</h4><table class="editable-table"><thead><tr><th>Column Name</th><th>Pattern</th></tr></thead><tbody>`;
-            for (const [col, pattern] of Object.entries(data.columns)) {
-                patternHtml += `<tr><td>${col}</td><td><input type="text" value="${pattern.replace(/"/g, '&quot;')}" data-col-name="${col}"></td></tr>`;
-            }
-            patternHtml += '</tbody></table>';
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const fileNameDisplay = document.getElementById('file-name');
+            
+            const progressTitle = document.getElementById('progress-title');
+            const progressBar = document.getElementById('progress-bar-inner');
+            const progressText = document.getElementById('progress-text');
+            
+            const dataStartIndicatorInput = document.getElementById('data-start-indicator');
+            const recordSeparatorInput = document.getElementById('record-separator');
+            const columnsEditor = document.getElementById('columns-editor');
+            const sampleDataTable = document.getElementById('sample-data-table');
+            const extractBtn = document.getElementById('extract-btn');
+            
+            const resultMessage = document.getElementById('result-message');
+            const downloadLink = document.getElementById('download-link');
+            const startOverBtn = document.getElementById('start-over-btn');
 
-            let sampleHtml = '';
-            if (fromAI && data.sample_data && data.sample_data.length > 0) {
-                sampleHtml = '<h4>Sample Data Preview (from AI)</h4><div class="table-wrapper">' + createTable(data.sample_data) + '</div>';
-            }
+            const errorNotification = document.getElementById('error-notification');
+            const errorMessage = document.getElementById('error-message');
+            const errorCloseBtn = document.getElementById('error-close-btn');
 
-            analysisOutput.innerHTML = recordSepHtml + patternHtml + sampleHtml;
-        }
+            // --- State Variables ---
+            let taskId = null;
+            let analysisPayload = {};
+            let eventSource = null;
 
-        function displayResults(data) {
-            hideProgressCard();
-            analysisCard.classList.add('hidden');
-            resultsCard.classList.remove('hidden');
-            resultsSummary.textContent = data.message;
-            resultsSummary.style.display = 'block';
-            downloadLink.href = `/download/${data.file_path}`;
-            downloadLink.setAttribute('download', data.file_path);
+            // --- UI Helper Functions ---
+            const showSection = (sectionId) => {
+                [uploadSection, progressSection, analysisSection, resultSection].forEach(s => s.classList.add('hidden'));
+                document.getElementById(sectionId).classList.remove('hidden');
+            };
 
-            if (data.data && data.data.length > 0) {
-                resultsPreview.innerHTML = createTable(data.data.slice(0, 20)); // Show up to 20 rows
-            }
-        }
-
-        function getCustomizedPatterns() {
-            const columns = {};
-            document.querySelectorAll('.editable-table input[type="text"]').forEach(input => {
-                columns[input.dataset.colName] = input.value;
-            });
-            const record_separator = document.getElementById('record-separator').value;
-            return { columns, record_separator };
-        }
-
-        function createTable(data) {
-            if (!data || data.length === 0) return '<p>No data to display.</p>';
-            const headers = Object.keys(data[0]);
-            let table = '<table class="results-table"><thead><tr>';
-            headers.forEach(h => table += `<th>${h}</th>`);
-            table += '</tr></thead><tbody>';
-            data.forEach(row => {
-                table += '<tr>';
-                headers.forEach(h => table += `<td>${(row[h] || '').toString().replace(/</g, "&lt;").replace(/>/g, "&gt;")}</td>`);
-                table += '</tr>';
-            });
-            table += '</tbody></table>';
-            return table;
-        }
-
-        // Helpers
-        function showError(message) { errorMessage.textContent = message; errorMessage.style.display = 'block'; }
-        function hideError() { errorMessage.style.display = 'none'; }
-        function toggleButtonLoading(button, isLoading) {
-            const loader = button.querySelector('.loader');
-            button.disabled = isLoading;
-            if(loader) loader.style.display = isLoading ? 'inline-block' : 'none';
-        }
-
-        function resetState(keepFile = false) {
-            if (!keepFile) {
-                uploadedFile = null;
-                fileNameDisplay.textContent = '';
-                analyzeBtn.disabled = true;
-                fileInput.value = '';
-            }
-            processedFilePath = null;
-            uploadCard.classList.remove('hidden');
-            progressCard.classList.add('hidden');
-            analysisCard.classList.add('hidden');
-            resultsCard.classList.add('hidden');
-            hideError();
-            if (progressSource) {
-                progressSource.close();
-                progressSource = null;
-            }
-        }
-
-        // Progress Streaming
-        function startProgressStream(taskId) {
-            if (progressSource) progressSource.close();
-            progressSource = new EventSource(`/progress/${taskId}`);
-            progressSource.onmessage = function(event) {
-                const data = JSON.parse(event.data);
-                progressBar.style.width = `${data.percentage}%`;
-                progressBar.textContent = `${data.percentage}%`;
-                progressStatus.textContent = data.status;
-                if (data.percentage === 100) {
-                    progressSource.close();
+            const showError = (message) => {
+                errorMessage.textContent = message;
+                errorNotification.classList.remove('hidden');
+                // Hide progress section if it was visible
+                if (!progressSection.classList.contains('hidden')) {
+                    showSection('upload-section');
+                    resetUI();
                 }
             };
-            progressSource.onerror = () => {
-                if (progressSource) progressSource.close();
+
+            const resetUI = () => {
+                fileInput.value = '';
+                fileNameDisplay.textContent = '';
+                taskId = null;
+                analysisPayload = {};
+                if (eventSource) eventSource.close();
+                showSection('upload-section');
             };
-        }
+            
+            // --- Event Listeners ---
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelect();
+                }
+            });
+            fileInput.addEventListener('change', handleFileSelect);
+
+            extractBtn.addEventListener('click', handleExtract);
+            startOverBtn.addEventListener('click', resetUI);
+            errorCloseBtn.addEventListener('click', () => errorNotification.classList.add('hidden'));
+
+            // --- Core Logic ---
+            function handleFileSelect() {
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    fileNameDisplay.textContent = `Selected File: ${file.name}`;
+                    handleUploadAndAnalyze(file);
+                }
+            }
+
+            function generateTaskId() {
+                return 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            }
+
+            function startProgressStream(id) {
+                if (eventSource) {
+                    eventSource.close();
+                }
+                eventSource = new EventSource(`/progress/${id}`);
+                
+                eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    progressBar.style.width = `${data.percentage}%`;
+                    progressBar.textContent = `${data.percentage}%`;
+                    progressText.textContent = data.status;
+                    if (data.percentage >= 100) {
+                        eventSource.close();
+                    }
+                };
+
+                eventSource.onerror = (err) => {
+                    console.error("EventSource failed:", err);
+                    eventSource.close();
+                };
+            }
+
+            async function handleUploadAndAnalyze(file) {
+                taskId = generateTaskId();
+                progressTitle.textContent = "Analyzing Document...";
+                showSection('progress-section');
+                startProgressStream(taskId);
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/upload-and-analyze', {
+                        method: 'POST',
+                        headers: { 'X-Task-ID': taskId },
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Analysis failed.');
+                    }
+
+                    const data = await response.json();
+                    analysisPayload = data; // Store the full payload
+                    displayAnalysisResults(data);
+                } catch (error) {
+                    console.error('Analysis Error:', error);
+                    showError(error.message);
+                }
+            }
+
+            function displayAnalysisResults(data) {
+                dataStartIndicatorInput.value = data.data_start_indicator || '';
+                recordSeparatorInput.value = data.record_separator || '';
+                
+                // Populate columns editor
+                columnsEditor.innerHTML = '';
+                for (const colName in data.columns) {
+                    const div = document.createElement('div');
+                    div.className = 'columns-editor-grid';
+                    
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.value = colName;
+                    nameInput.dataset.originalName = colName;
+
+                    const regexInput = document.createElement('input');
+                    regexInput.type = 'text';
+                    regexInput.value = data.columns[colName];
+
+                    const typeSelect = document.createElement('select');
+                    ['string', 'number', 'date'].forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                        if (data.data_types[colName] === type) {
+                            option.selected = true;
+                        }
+                        typeSelect.appendChild(option);
+                    });
+                    
+                    div.appendChild(nameInput);
+                    div.appendChild(regexInput);
+                    div.appendChild(typeSelect);
+                    columnsEditor.appendChild(div);
+                }
+
+                // Populate sample data table
+                if (data.sample_data && data.sample_data.length > 0) {
+                    const table = document.createElement('table');
+                    const thead = document.createElement('thead');
+                    const tbody = document.createElement('tbody');
+                    const headerRow = document.createElement('tr');
+                    
+                    Object.keys(data.sample_data[0]).forEach(key => {
+                        const th = document.createElement('th');
+                        th.textContent = key;
+                        headerRow.appendChild(th);
+                    });
+                    thead.appendChild(headerRow);
+
+                    data.sample_data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        Object.values(row).forEach(val => {
+                            const td = document.createElement('td');
+                            td.textContent = val;
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+
+                    table.appendChild(thead);
+                    table.appendChild(tbody);
+                    sampleDataTable.innerHTML = '';
+                    sampleDataTable.appendChild(table);
+                } else {
+                    sampleDataTable.innerHTML = '<p>No sample data was generated by the AI.</p>';
+                }
+                
+                showSection('analysis-section');
+            }
+            
+            async function handleExtract() {
+                // Collect modified data from the form
+                const updatedColumns = {};
+                const updatedDataTypes = {};
+                const columnRows = columnsEditor.querySelectorAll('.columns-editor-grid');
+                columnRows.forEach(row => {
+                    const nameInput = row.children[0];
+                    const regexInput = row.children[1];
+                    const typeSelect = row.children[2];
+                    const newName = nameInput.value;
+                    if (newName) {
+                        updatedColumns[newName] = regexInput.value;
+                        updatedDataTypes[newName] = typeSelect.value;
+                    }
+                });
+
+                const payload = {
+                    file_path: analysisPayload.file_path,
+                    columns: updatedColumns,
+                    data_types: updatedDataTypes,
+                    record_separator: recordSeparatorInput.value,
+                    data_start_indicator: dataStartIndicatorInput.value,
+                };
+                
+                progressTitle.textContent = "Extracting Full Document...";
+                showSection('progress-section');
+                startProgressStream(taskId);
+
+                try {
+                    const response = await fetch('/extract-data', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Task-ID': taskId
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Extraction failed.');
+                    }
+                    
+                    const data = await response.json();
+                    displayDownloadLink(data);
+                } catch (error) {
+                    console.error('Extraction Error:', error);
+                    showError(error.message);
+                }
+            }
+
+            function displayDownloadLink(data) {
+                resultMessage.textContent = data.message;
+                downloadLink.href = `/download/${data.file_path}`;
+                downloadLink.setAttribute('download', data.file_path);
+                showSection('result-section');
+            }
+        });
     </script>
 </body>
 </html>
