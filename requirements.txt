@@ -1,7 +1,0 @@
-fastapi
-uvicorn[standard]
-google-generativeai
-PyMuPDF
-pandas
-python-dotenv
-openpyxl

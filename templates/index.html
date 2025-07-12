@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart PDF Data Extractor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .progress {
+            height: 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.2);
+        }
+        .progress-bar {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-radius: 10px;
+        }
+        .alert {
+            border: none;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-input-label {
+            display: block;
+            padding: 1.5rem 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-input-label:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border {
+            width: 1rem;
+            height: 1rem;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .stats-item {
+            text-align: center;
+            padding: 1rem;
+        }
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .preview-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+        }
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 0.75rem;
+        }
+        .table td {
+            padding: 0.75rem;
+            vertical-align: middle;
+            border-top: 1px solid #dee2e6;
+        }
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .feature-list i {
+            color: #38ef7d;
+            margin-right: 0.5rem;
+        }
+        .column-examples {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        .example-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header text-center">
+                <h2><i class="fas fa-brain"></i> Smart PDF Data Extractor</h2>
+                <p class="mb-0">AI-powered extraction with noise filtering and clean output</p>
+            </div>
+            <div class="card-body p-4">
+                <!-- Features Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-magic"></i> Key Features</h5>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check-circle"></i> Intelligent header/footer removal</li>
+                            <li><i class="fas fa-check-circle"></i> Noise and irrelevant content filtering</li>
+                            <li><i class="fas fa-check-circle"></i> Clean, structured data output</li>
+                            <li><i class="fas fa-check-circle"></i> Advanced AI-powered extraction</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-lightbulb"></i> Column Examples</h5>
+                        <div class="column-examples">
+                            <div class="example-tag">Name</div>
+                            <div class="example-tag">Email</div>
+                            <div class="example-tag">Phone</div>
+                            <div class="example-tag">Company</div>
+                            <div class="example-tag">Address</div>
+                            <div class="example-tag">Date</div>
+                            <div class="example-tag">Amount</div>
+                            <div class="example-tag">Status</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="pdfFile" class="form-label">
+                                    <i class="fas fa-file-upload"></i> Upload PDF Document
+                                </label>
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" required>
+                                    <label for="pdfFile" class="file-input-label">
+                                        <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
+                                        <br><strong>Drop PDF file here or click to browse</strong>
+                                        <br><small class="text-muted">Maximum file size: 16MB</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="maxPages" class="form-label">
+                                    <i class="fas fa-file-alt"></i> Maximum Pages
+                                </label>
+                                <input type="number" class="form-control" id="maxPages" name="max_pages" 
+                                       min="1" max="100" placeholder="e.g., 10">
+                                <small class="text-muted">Leave empty to process all pages</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="columnNames" class="form-label">
+                            <i class="fas fa-columns"></i> Data Columns to Extract
+                        </label>
+                        <input type="text" class="form-control" id="columnNames" name="column_names" required
+                               placeholder="Enter column names separated by commas (e.g., Name, Email, Phone, Company)">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Specify the exact data fields you want to extract. The AI will intelligently find and extract relevant information.
+                        </small>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-robot"></i> Extract Data with AI
+                            <span class="loading">
+                                <span class="spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="progressContainer" class="mt-4" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+<div class="text-center mt-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="mt-2">
+                            <strong>Processing PDF with AI...</strong>
+                            <br><small class="text-muted">Filtering noise and extracting clean data</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="alertContainer" class="mt-4"></div>
+                
+                <!-- Statistics Section -->
+                <div id="statsContainer" class="mt-4" style="display: none;">
+                    <div class="stats-card">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="stats-item">
+                                    <span class="stats-number" id="totalPages">0</span>
+                                    <span class="stats-label">Total Pages</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-item">
+                                    <span class="stats-number" id="pagesWithData">0</span>
+                                    <span class="stats-label">Pages with Data</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-item">
+                                    <span class="stats-number" id="columnsExtracted">0</span>
+                                    <span class="stats-label">Columns Extracted</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-item">
+                                    <span class="stats-number" id="dataQuality">0%</span>
+                                    <span class="stats-label">Data Quality</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Results Section -->
+                <div id="resultContainer" class="mt-4" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-table"></i> Extracted Data Results</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <button id="downloadCSV" class="btn btn-success me-2">
+                                        <i class="fas fa-file-csv"></i> Download CSV
+                                    </button>
+                                    <button id="downloadExcel" class="btn btn-success me-2">
+                                        <i class="fas fa-file-excel"></i> Download Excel
+                                    </button>
+                                    <button id="previewBtn" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Preview Data
+                                    </button>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div id="dataStats" class="small text-muted"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Data Coverage Chart -->
+                            <div id="coverageContainer" class="mb-4" style="display: none;">
+                                <h6><i class="fas fa-chart-bar"></i> Data Coverage by Column</h6>
+                                <div id="coverageChart"></div>
+                            </div>
+                            
+                            <!-- Preview Container -->
+                            <div id="previewContainer" class="preview-container" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        let currentFilename = '';
+        let currentSummary = null;
+        
+        // Handle file input change
+        document.getElementById('pdfFile').addEventListener('change', function(e) {
+            const label = document.querySelector('.file-input-label');
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                label.innerHTML = `
+                    <i class="fas fa-file-pdf fa-3x mb-3" style="color: #dc3545;"></i>
+                    <br><strong>${file.name}</strong>
+                    <br><small class="text-muted">Size: ${fileSize} MB</small>
+                `;
+            } else {
+                label.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
+                    <br><strong>Drop PDF file here or click to browse</strong>
+                    <br><small class="text-muted">Maximum file size: 16MB</small>
+                `;
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const loading = submitBtn.querySelector('.loading');
+            const progressContainer = document.getElementById('progressContainer');
+            const alertContainer = document.getElementById('alertContainer');
+            const resultContainer = document.getElementById('resultContainer');
+            const statsContainer = document.getElementById('statsContainer');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            loading.style.display = 'inline-block';
+            progressContainer.style.display = 'block';
+            alertContainer.innerHTML = '';
+            resultContainer.style.display = 'none';
+            statsContainer.style.display = 'none';
+            
+            // Animate progress bar
+            let progress = 0;
+            const progressBar = document.querySelector('.progress-bar');
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 85) progress = 85;
+                progressBar.style.width = progress + '%';
+            }, 800);
+            
+            // Submit form
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(interval);
+                progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    loading.style.display = 'none';
+                    progressContainer.style.display = 'none';
+                    progressBar.style.width = '0%';
+                    
+                    if (data.success) {
+                        currentFilename = data.output_filename;
+                        currentSummary = data.summary;
+                        
+                        // Show success message
+                        showAlert('success', `
+                            <i class="fas fa-check-circle"></i> 
+                            <strong>Success!</strong> Extracted clean data from ${data.summary.pages_with_data} pages.
+                            <br><small>Filtered out headers, footers, and irrelevant content.</small>
+                        `);
+                        
+                        // Show statistics
+                        showStatistics(data.summary);
+                        
+                        // Show results
+                        resultContainer.style.display = 'block';
+                        
+                        // Setup buttons
+                        document.getElementById('downloadCSV').onclick = () => downloadFile('csv');
+                        document.getElementById('downloadExcel').onclick = () => downloadFile('excel');
+                        document.getElementById('previewBtn').onclick = () => previewData();
+                        
+                        // Show data coverage
+                        showDataCoverage(data.summary.data_coverage);
+                        
+                    } else {
+                        showAlert('danger', `
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            <strong>Error:</strong> ${data.error}
+                        `);
+                    }
+                }, 1000);
+            })
+            .catch(error => {
+                clearInterval(interval);
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                
+                showAlert('danger', `
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Error:</strong> ${error.message}
+                `);
+            });
+        });
+        
+        function showAlert(type, message) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            alertContainer.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+        
+        function showStatistics(summary) {
+            const statsContainer = document.getElementById('statsContainer');
+            
+            // Calculate data quality percentage
+            const totalCells = summary.pages_with_data * summary.columns_extracted;
+            const filledCells = Object.values(summary.data_coverage).reduce((a, b) => a + b, 0);
+            const dataQuality = Math.round((filledCells / totalCells) * 100);
+            
+            document.getElementById('totalPages').textContent = summary.total_pages_processed;
+            document.getElementById('pagesWithData').textContent = summary.pages_with_data;
+            document.getElementById('columnsExtracted').textContent = summary.columns_extracted;
+            document.getElementById('dataQuality').textContent = dataQuality + '%';
+            
+            statsContainer.style.display = 'block';
+        }
+        
+        function showDataCoverage(dataCoverage) {
+            const coverageContainer = document.getElementById('coverageContainer');
+            const coverageChart = document.getElementById('coverageChart');
+            
+            let chartHTML = '<div class="row">';
+            
+            Object.entries(dataCoverage).forEach(([column, count]) => {
+                const percentage = currentSummary ? 
+                    Math.round((count / currentSummary.pages_with_data) * 100) : 0;
+                
+                chartHTML += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">${column}</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: ${percentage}%"
+                                         aria-valuenow="${percentage}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        ${percentage}%
+                                    </div>
+                                </div>
+                                <small class="text-muted">${count} of ${currentSummary.pages_with_data} pages</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            chartHTML += '</div>';
+            coverageChart.innerHTML = chartHTML;
+            coverageContainer.style.display = 'block';
+        }
+        
+        function downloadFile(format) {
+            if (!currentFilename) return;
+            
+            const link = document.createElement('a');
+            link.href = `/download/${format}/${currentFilename}`;
+            link.download = `${currentFilename}.${format}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show download success message
+            showAlert('success', `
+                <i class="fas fa-download"></i> 
+                <strong>Download Started!</strong> Your clean ${format.toUpperCase()} file is being downloaded.
+            `);
+        }
+        
+        function previewData() {
+            if (!currentFilename) return;
+            
+            const previewContainer = document.getElementById('previewContainer');
+            const previewBtn = document.getElementById('previewBtn');
+            
+            // Show loading state
+            previewBtn.disabled = true;
+            previewBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+            
+            fetch(`/preview/${currentFilename}`)
+            .then(response => response.json())
+            .then(data => {
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview Data';
+                
+                if (data.success) {
+                    previewContainer.innerHTML = `
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6><i class="fas fa-table"></i> Data Preview</h6>
+                                <span class="badge bg-primary">${data.shape[0]} rows × ${data.shape[1]} columns</span>
+                            </div>
+                            ${data.html_table}
+                        </div>
+                    `;
+                    
+                    // Initialize DataTable for better interaction
+                    setTimeout(() => {
+                        if ($.fn.DataTable) {
+                            $('#dataTable').DataTable({
+                                pageLength: 10,
+                                responsive: true,
+                                order: [[data.columns.indexOf('page_number'), 'asc']],
+                                columnDefs: [{
+                                    targets: data.columns.indexOf('page_number'),
+                                    width: '80px'
+                                }]
+                            });
+                        }
+                    }, 100);
+                    
+                    previewContainer.style.display = 'block';
+                } else {
+                    showAlert('danger', `
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>Preview Error:</strong> ${data.error}
+                    `);
+                }
+            })
+            .catch(error => {
+                previewBtn.disabled = false;
+                previewBtn.innerHTML = '<i class="fas fa-eye"></i> Preview Data';
+                showAlert('danger', `
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Preview Error:</strong> ${error.message}
+                `);
+            });
+        }
+        
+        // Drag and drop functionality
+        const fileInputLabel = document.querySelector('.file-input-label');
+        const fileInput = document.getElementById('pdfFile');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            fileInputLabel.style.borderColor = '#667eea';
+            fileInputLabel.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+        }
+        
+        function unhighlight(e) {
+            fileInputLabel.style.borderColor = '#dee2e6';
+            fileInputLabel.style.backgroundColor = '';
+        }
+        
+        fileInputLabel.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            } else {
+                showAlert('danger', `
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Invalid File:</strong> Please upload a PDF file only.
+                `);
+            }
+        }
+    </script>
+</body>
+</html>
